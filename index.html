@@ -131,8 +131,8 @@ a{color:inherit}
 .evcard dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:15.5px}
 .evcard dt{color:var(--muted)}
 .evcard dd{margin:0;font-weight:600}
-.evweek{display:flex;flex-direction:column;gap:18px;padding:16px 16px 22px}
-.evweek img{border-radius:8px;width:100%;cursor:zoom-in}
+.evweek{display:flex;flex-direction:column;gap:18px;padding:16px 16px 22px;background:linear-gradient(180deg,#0F3A31 0,#0F3A31 220px,#fff 220px)}
+.evweek img{border-radius:8px;width:100%;max-width:350px;margin:0 auto;cursor:zoom-in}
 .evweek > div{padding:0 8px}
 .evweek h3{font-size:21px}
 .evbtn{padding:18px;font-size:17px}
@@ -299,6 +299,21 @@ label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
 #resultMsg{margin-top:12px;font-weight:700;text-align:center;min-height:1.4em}
 @media (max-width:860px){.form-area{grid-template-columns:1fr}}
 @media (max-width:520px){.fg{grid-template-columns:1fr}#consultForm,.calc form,.cbox{padding:22px}}
+
+/* 팝업 */
+.pop{position:fixed;inset:0;z-index:120;background:rgba(6,24,19,.6);display:none;align-items:center;justify-content:center;padding:16px}
+.pop.on{display:flex}
+.pop-box{background:#fff;border-radius:12px;overflow:hidden;max-width:730px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.pop-imgs{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;background:#0E3B32}
+.pop-imgs a{flex:0 0 50%;scroll-snap-align:start;display:block}
+.pop-imgs img{width:100%;height:auto;display:block}
+.pop-dots{display:none;justify-content:center;gap:6px;padding:8px 0 0}
+.pop-dots i{width:7px;height:7px;border-radius:50%;background:#C9CFCB}
+.pop-dots i.on{background:var(--green)}
+.pop-ft{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:14px}
+.pop-ft button{font:inherit;background:none;border:0;cursor:pointer;color:var(--muted);padding:6px 4px}
+.pop-ft .pop-x{color:var(--green);font-weight:800}
+@media (max-width:600px){.pop-box{max-width:350px}.pop-imgs a{flex-basis:100%}.pop-dots{display:flex}}
 
 /* 라이트박스 */
 .lb{position:fixed;inset:0;z-index:100;background:rgba(10,20,16,.9);display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
@@ -740,6 +755,20 @@ label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
 
 <div class="lb" id="lb" role="dialog" aria-label="이미지 크게 보기"><img alt=""></div>
 
+<div class="pop" id="pop" role="dialog" aria-modal="true" aria-label="두정역 푸르지오 그랑피크 안내">
+  <div class="pop-box">
+    <div class="pop-imgs" id="popImgs">
+      <a href="#contact"><img src="pop_safe.jpg" width="350" height="572" alt="계약조건 안심보장제: 계약 이후 계약조건이 변경될 경우, 기존 계약자에게도 동일한 혜택을 적용해 드립니다."></a>
+      <a href="#event"><img src="pop_weekly.png" width="350" height="544" alt="견본주택 방문고객 주말 경품 이벤트: 매주 토·일요일 오후 3시 추첨, 계약자 및 모델하우스 방문 상담고객 대상"></a>
+    </div>
+    <div class="pop-dots" id="popDots"><i class="on"></i><i></i></div>
+    <div class="pop-ft">
+      <button type="button" id="popToday">오늘 하루 보지 않기</button>
+      <button type="button" class="pop-x" id="popClose">닫기 ✕</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* 주택형 정보 (㎡) — 공고 및 서비스면적표 */
 const UNIT = {
@@ -834,6 +863,20 @@ document.getElementById('evBannerLink').addEventListener('click',e=>{
   e.preventDefault(); document.getElementById('consultForm').scrollIntoView({behavior:'smooth',block:'center'});
   setTimeout(()=>document.getElementById('name').focus({preventScroll:true}),500);
 });
+/* ===== 팝업: 접속 시 표시, '오늘 하루 보지 않기'는 이 브라우저에만 저장 ===== */
+(function(){
+  const pop=document.getElementById('pop'); const KEY='djPopHideDate'; const today=new Date().toISOString().slice(0,10);
+  let hidden=false; try{hidden=localStorage.getItem(KEY)===today;}catch(e){}
+  if(!hidden) setTimeout(()=>pop.classList.add('on'),400);
+  const close=()=>pop.classList.remove('on');
+  document.getElementById('popClose').addEventListener('click',close);
+  document.getElementById('popToday').addEventListener('click',()=>{try{localStorage.setItem(KEY,today);}catch(e){} close();});
+  pop.addEventListener('click',e=>{ if(e.target===pop) close(); });
+  pop.querySelectorAll('.pop-imgs a').forEach(a=>a.addEventListener('click',close));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+  const box=document.getElementById('popImgs'), dots=document.querySelectorAll('#popDots i');
+  box.addEventListener('scroll',()=>{const i=Math.round(box.scrollLeft/box.clientWidth); dots.forEach((d,k)=>d.classList.toggle('on',k===i));});
+})();
 /* ===== 라이트박스 ===== */
 const lb=document.getElementById('lb');
 document.addEventListener('click',e=>{
